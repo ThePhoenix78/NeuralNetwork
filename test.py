@@ -4,11 +4,9 @@ import os
 # import numpy as np
 from neural import NeuralNetwork, flatten
 
-size = 28
 
+# dataset
 images_path = "images"
-
-# image set
 parapluie_path = f"{images_path}/parapluie"
 ballon_path = f"{images_path}/ballon"
 cacahuete_path = f"{images_path}/cacahuete"
@@ -19,7 +17,7 @@ test_path = f"{images_path}/test"
 
 
 # size to flatten
-x = 9
+x = 7
 
 name = []
 test = []
@@ -74,20 +72,20 @@ for im in os.listdir(test_path):
 
 # 2 hiddens layers (25 and 10 length)
 hidden_layers = [
-     # [256, "sigmoid"],
      [25, "sigmoid"],
      [10, "sigmoid"]
 ]
-NN = NeuralNetwork(inputs=entre, results=sort, training_set=training_set, hidden_layers=hidden_layers, activation_function="sigmoid")  # , trained_set="models/123.json")
+
+NN = NeuralNetwork(inputs=entre, results=sort, training_set=training_set, hidden_layers=hidden_layers, activation_function="sigmoid")
 
 print("Starting training...")
-a = NN.deep_train(learning_method="genetic", population_size=50, learning_rate=1, cool=30, reset=True, max_retry=50, epoch=10, mutation=0, error=5, divide_set=0, absolute_end=5)
-# NN.genetic_train(population_size=10, epoch=50, error=0, threshold_error=0, mutation=60, method=1)
-# NN.train(epoch=100, learning_rate=2, error=10, divide_set=50)
-# NN.genetic_train(100, 1000, error=10, threshold_error=15, mutation=70, method=1, deep=True)
+# a = NN.special_train(learning_method="deep", population_size=50, learning_rate=1, cool=10, reset=True, max_retry=10, epoch=500, mutation=50, error=10, absolute_end=5)
+a = NN.smart_train(learning_method="deep", population_size=50, learning_rate=1, cool=10, reset=True, max_retry=10, epoch=500, mutation=5, error=10)
+# NN.genetic_train(population_size=50, epoch=150, error=10, threshold_error=0, mutation=40, method=2)
+# NN.deep_train(epoch=1500, learning_rate=1, error=10)
 
-# print(NN.predict(training_set[0][0], True))
-NN.show_result(True, 1500)
+
+NN.show_result(True)
 
 
 if input("save? (y/n) : ") == "y":
