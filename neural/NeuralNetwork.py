@@ -100,7 +100,7 @@ class NeuralNetwork(object):
         # layer.append(Layer((input_size, self.hidden_layers[0][0], self.activation_function))
         layer.append(Layer(self.input_size, self.hidden_layers[0][0], self.hidden_layers[0][1]))
 
-        for i in range(len(self.hidden_layers)-2):
+        for i in range(len(self.hidden_layers)-1):
             layer.append(Layer(self.hidden_layers[i][0], self.hidden_layers[i+1][0], self.hidden_layers[i+1][1]))
 
         # layer.append(Layer(self.hidden_layers[-1][0], output_size, self.hidden_layers[-1][1]))
@@ -378,7 +378,8 @@ class NeuralNetwork(object):
                                    reset=reset,
                                    mutation=mutation,
                                    error=error,
-                                   divide_set=divide_set)
+                                   divide_set=divide_set
+                                   )
             i += 1
 
         return val
@@ -446,6 +447,7 @@ class NeuralNetwork(object):
                 # ind[i] = self.predict(prediction=self.data, round=False, layers=layers[i])
                 # self.show_result(True, "all", layers[i])
                 # comp_all[i] = self.compare_all(layers=layers[i])
+
                 comp_sing[i] = self.compare_single(layers=layers[i])
 
             err = min(comp_sing)
