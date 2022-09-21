@@ -67,6 +67,9 @@ class NeuralNetwork(object):
         self.reset_neural_network()
 
     def reset_neural_network(self):
+        """
+        will reset all the weights and bias of the neural network
+        """
         self.layers = []
 
         self.size = len(self.hidden_layers)+1
@@ -128,6 +131,9 @@ class NeuralNetwork(object):
         self.layers.append(layer)
 
     def select_training_set(self):
+        """
+        will select a training set from the current dataset
+        """
         self.training_set = []
         tests = []
         results = []
@@ -153,6 +159,16 @@ class NeuralNetwork(object):
             self.training_set.append([k, v])
 
     def cut_dataset(self, dataset: list, divide: int = None):
+        """
+        can divide a dataset in multiple smaller datasets
+
+        args:
+            dataset     : the dataset
+            divide      : the amount of sub-dataset
+
+        return:
+            a list of dataset
+        """
         if divide in (0, 1) or not divide:
             return [dataset]
 
@@ -173,6 +189,9 @@ class NeuralNetwork(object):
         return t_data
 
     def forward(self, data):
+        """
+        forward method of the Neural Network
+        """
         z = np.dot(data, self.layers[0].weight)
         self.layers[0].activate(z)
 
@@ -181,6 +200,10 @@ class NeuralNetwork(object):
             self.layers[i].activate(z1)
 
     def backward(self, data, output, learning_rate: int = 1):
+        """
+        backward method of the Neural Network
+        """
+
         out = self.layers[-1].bias
 
         out_error = output - out
@@ -202,7 +225,26 @@ class NeuralNetwork(object):
 
         self.layers[-1].weight += self.layers[-2].bias.T.dot(out_delta) * learning_rate
 
-    def train(self, epoch: int = 1000, learning_rate: int = 1, error: int = 0, divide_set: int = None):
+    def deep_train(self,
+                   epoch: int = 1000,
+                   learning_rate: int = 1,
+                   error: int = 0,
+                   divide_set: int = None
+                   ):
+
+        """
+        deep learning
+        use forward and backward propagation to learn from it's mistake
+
+        args:
+            epoch           : the number of iterations
+            error           :
+            learning_rate   : adjust the precision
+            divide_set      : chances of neuron network mutation
+
+        return:
+            nothing
+        """
         data = self.cut_dataset(self.data, divide_set)
         output = self.cut_dataset(self.output, divide_set)
 
@@ -227,6 +269,9 @@ class NeuralNetwork(object):
                     error: int = 5,
                     divide_set: int = 1
                     ):
+        """
+        ❗ experimental method ❗
+        """
 
         if isinstance(mutation, int):
             mutation = [mutation, ["sigmoid"]]
@@ -245,7 +290,7 @@ class NeuralNetwork(object):
                 if learning_rate == "random":
                     a = random()
 
-                self.train(epoch=epoch, learning_rate=a, error=error, divide_set=divide_set)
+                self.deep_train(epoch=epoch, learning_rate=a, error=error, divide_set=divide_set)
 
             elif learning_method == "genetic":
                 a = population_size
@@ -290,20 +335,22 @@ class NeuralNetwork(object):
 
         return True
 
-    def deep_train(self,
-                   learning_method: str = "shuffle",
-                   epoch: int = 100,
-                   learning_rate: int = "random",
-                   population_size: int = "random",
-                   cool: int = 3,
-                   max_retry: int = 10,
-                   reset: bool = True,
-                   mutation: int = None,
-                   error: int = 15,
-                   divide_set: int = 1,
-                   absolute_end: int = 100
-                   ):
-
+    def special_train(self,
+                      learning_method: str = "shuffle",
+                      epoch: int = 100,
+                      learning_rate: int = "random",
+                      population_size: int = "random",
+                      cool: int = 3,
+                      max_retry: int = 10,
+                      reset: bool = True,
+                      mutation: int = None,
+                      error: int = 15,
+                      divide_set: int = 1,
+                      absolute_end: int = 100
+                      ):
+        """
+        ❗ experimental method ❗
+        """
         val = False
         i = 0
         learning = learning_method
@@ -367,6 +414,23 @@ class NeuralNetwork(object):
                       deep: bool = False,
                       init_layer: Layer = None
                       ):
+        """
+        genetic learning
+        will take the best of each epoch and reproduce it with the new generation
+
+        args:
+            population_size : size of the population
+            epoch           : the number of iterations
+            error           :
+            threshold_error : the reliability threshold
+            mutation        : chances of neuron network mutation
+            method          : 1 = mix only the layer 2 = mix all the weights
+            deep            : allows you to adjust with deep learning (experimental)
+            init_layer      : the init layer (not required)
+
+        return:
+            the result layer
+        """
         layers = [self.generate_scheme() for i in range(population_size)]
 
         if isinstance(init_layer, Layer):
@@ -410,17 +474,8 @@ class NeuralNetwork(object):
             prime = deepcopy(self.layers)
             self.show_result(True, "all")
             print("training...")
-            """
-            self.deep_train(
-                        learning_method="deep",
-                        epoch=10,
-                        learning_rate=1,
-                        cool=300,
-                        max_retry=20,
-                        reset=False,
-                        error=error)
-            """
-            self.train(100, 1, error)
+
+            self.deep_train(100, 1, error)
 
             p1 = self.compare_single(prime)
             p2 = self.compare_single(self.layers)
@@ -431,6 +486,9 @@ class NeuralNetwork(object):
         return self.layers
 
     def compare_all(self, layers: list = None):
+        """
+        compare all the elements from the training set with the actual result
+        """
         res = []
         res2 = []
         for i in range(len(self.training_set)):
@@ -451,6 +509,9 @@ class NeuralNetwork(object):
         return rel * 100 / size
 
     def compare_single(self, layers: list = None):
+        """
+        compare all the results from the training set with the actual result
+        """
         res = 0
 
         for i in range(len(self.training_set)):
@@ -462,7 +523,23 @@ class NeuralNetwork(object):
 
         return res * 100 / len(self.training_set)
 
-    def show_result(self, round: bool = True, maximum: int = "all", layers: list = None):
+    def show_result(self,
+                    round: bool = True,
+                    maximum: int = "all",
+                    layers: list = None
+                    ):
+        """
+        will display the results of the training in a table
+
+        args:
+            round       : if the results need to be rounded (0 or 1)
+            maximum     : the maximum elements displayed
+            layers      : the layer to compare and show results
+
+        return:
+            nothing
+        """
+
         if maximum == "all":
             maximum = len(self.training_set)
 
@@ -496,6 +573,18 @@ class NeuralNetwork(object):
         print("-"*50)
 
     def predict(self, prediction, round: bool = False, layers: list = None):
+        """
+        will predict a result based on the current neural network
+
+        args:
+            prediction  : the matrix to test
+            round       : if the results need to be rounded (0 or 1)
+            layers      : the layer to compare and show results
+
+        return:
+            the result matrix
+        """
+
         if not layers:
             layers = self.layers
 
