@@ -1,7 +1,4 @@
 import os
-# import random
-# import matplotlib as plt
-# import numpy as np
 from neural import NeuralNetwork, flatten
 
 
@@ -79,6 +76,7 @@ hidden_layers = [
 NN = NeuralNetwork(inputs=entre, results=sort, training_set=training_set, hidden_layers=hidden_layers, activation_function="sigmoid")
 
 print("Starting training...")
+
 # a = NN.special_train(learning_method="deep", population_size=50, learning_rate=1, cool=10, reset=True, max_retry=10, epoch=500, mutation=50, error=10, absolute_end=5)
 a = NN.smart_train(learning_method="deep", population_size=50, learning_rate=1, cool=10, reset=True, max_retry=10, epoch=500, mutation=5, error=10)
 # NN.genetic_train(population_size=50, epoch=150, error=10, threshold_error=0, mutation=40, method=2)
@@ -93,4 +91,4 @@ if input("save? (y/n) : ") == "y":
     if not name.endswith(".json"):
         name += ".json"
 
-    NN.save(f"models/{name}")
+    NN.save(f"{name}")
