@@ -231,7 +231,6 @@ class NeuralNetwork(object):
                    error: int = 0,
                    divide_set: int = None
                    ):
-
         """
         deep learning
         use forward and backward propagation to learn from it's mistake
@@ -528,15 +527,17 @@ class NeuralNetwork(object):
     def show_result(self,
                     round: bool = True,
                     maximum: int = "all",
-                    layers: list = None
+                    layers: list = None,
+                    show_layer_info: bool = True
                     ):
         """
         will display the results of the training in a table
 
         args:
-            round       : if the results need to be rounded (0 or 1)
-            maximum     : the maximum elements displayed
-            layers      : the layer to compare and show results
+            round           : if the results need to be rounded (0 or 1)
+            maximum         : the maximum elements displayed
+            layers          : the layer to compare and show results
+            show_layer_info : display the layer's inforamtions
 
         return:
             nothing
@@ -569,6 +570,10 @@ class NeuralNetwork(object):
         size = len(self.training_set) * len(self.training_set[0][1])
 
         print("-"*50)
+        if show_layer_info:
+            if not layers:
+                lay = self.layers
+            print(f"Layers : {[lay[i].input_size for i in range(1, len(lay))]} | input size {self.input_size} | output size : {self.output_size}")
         print(f"Errors      : {self.compare_all(layers=layers):.2f}% ({count_error}/{size} errors)")
         print(f"Error lines : {self.compare_single(layers=layers):.2f}%")
         print(make_table(labels=["Neural Network", "Test", "Equals", "Nb error"], rows=res, left=["Index"]+[i+1 for i in range(maxi)], centered=True))
