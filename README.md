@@ -18,3 +18,4 @@ This is how it looks like when you run the code
 
 ![explanation](./images/layers_explanation.jpg?raw=true "explanation of the neural network")
 
+**In this case, the AI determined that it only needs one layers of 13 weights to be more efficient**
