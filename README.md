@@ -1,16 +1,20 @@
 # NeuralNetwork
-A basic Neural Network made from scratch that does Linear Regression and Genetic Learning
+*A basic Neural Network made from scratch that does Linear Regression and Genetic Learning*
+
+**Note : This neural network can improve itself by changing the amount of weights/bias and layers with the time**
+
+Explanations :
 
 <div style="text-align: center;">
-![alt text](images/hidden3.jpg "how the neural network was set")
+![input](./images/hidden3.jpg?raw=true "how the neural network was set")
 </div>
 
-<p style="text-align: center;">will become</p>
+<p style="text-align: center;">Will become</p>
 
 <div style="text-align: center;">
-![alt text](images/hidden3.jpg "how the neural network end")
+![output](./images/hidden3.jpg?raw=true "how the neural network end")
  </div>
 
 <div style="text-align: center;">
-![alt text](images/layers_explanation.jpg "explanation of the neural network")
+![explanation](./images/layers_explanation.jpg?raw=true "explanation of the neural network")
  </div>
