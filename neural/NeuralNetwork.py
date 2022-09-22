@@ -1,5 +1,5 @@
 from .to_table import make_table
-from .Flatten import flatten
+# from .Flatten import flatten
 from .Layer import Layer
 from .numpy_encoder import NumpyEncoder
 
@@ -49,8 +49,10 @@ class NeuralNetwork(object):
 
             for i in range(len(data["type"])):
                 self.set_layer(data["weight"][i], data["bias"][i], data["type"][i])
+                self.hidden_layers.append([len(data["weight"][i]), data["type"][i]])
 
-            self.size = len(self.layers)
+            self.hidden_layers.pop(0)
+            self.size = len(data["type"])
             return
 
         for i in range(len(hidden_layers)):
@@ -551,12 +553,14 @@ class NeuralNetwork(object):
         maxi = min(a, maximum)
 
         count_error = 0
+        count_error2 = 0
         for i in range(maxi):
             val = self.predict(prediction=self.training_set[i][0], round=round, layers=layers)
             same = True
             a = (val == self.training_set[i][1])
 
             if False in a:
+                count_error2 += 1
                 same = False
 
             nb_error = 0
@@ -568,14 +572,15 @@ class NeuralNetwork(object):
             res.append([val, self.training_set[i][1], same, nb_error])
 
         size = len(self.training_set) * len(self.training_set[0][1])
+        size2 = len(self.training_set)
 
         print("-"*50)
         if show_layer_info:
             if not layers:
                 lay = self.layers
-            print(f"Layers : {[lay[i].input_size for i in range(1, len(lay))]} | input size {self.input_size} | output size : {self.output_size}")
+            print(f"Layers : {[[lay[i].input_size, lay[i].activation_function] for i in range(1, len(lay))]} | input size {self.input_size} | output size : {self.output_size}")
         print(f"Errors      : {self.compare_all(layers=layers):.2f}% ({count_error}/{size} errors)")
-        print(f"Error lines : {self.compare_single(layers=layers):.2f}%")
+        print(f"Error lines : {self.compare_single(layers=layers):.2f}% ({count_error2}/{size2} errors)")
         print(make_table(labels=["Neural Network", "Test", "Equals", "Nb error"], rows=res, left=["Index"]+[i+1 for i in range(maxi)], centered=True))
         print("-"*50)
 
@@ -595,11 +600,11 @@ class NeuralNetwork(object):
         if not layers:
             layers = self.layers
 
-        res = [0] * self.size
+        res = [0] * len(layers)
         z = np.dot(prediction, layers[0].weight)
         res[0] = layers[0].predict(z)
 
-        for i in range(1, self.size):
+        for i in range(1, len(layers)):
             z1 = np.dot(res[i-1], layers[i].weight)
             res[i] = layers[i].predict(z1)
 
