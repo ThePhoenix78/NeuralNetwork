@@ -5,16 +5,16 @@
 
 Explanations :
 
-<div style="text-align: center;">
+
 ![input](./images/hidden3.jpg?raw=true "how the neural network was set")
-</div>
+
 
 <p style="text-align: center;">Will become</p>
 
-<div style="text-align: center;">
-![output](./images/hidden3.jpg?raw=true "how the neural network end")
- </div>
 
-<div style="text-align: center;">
+![output](./images/hidden3.jpg?raw=true "how the neural network end")
+
+
+
 ![explanation](./images/layers_explanation.jpg?raw=true "explanation of the neural network")
- </div>
+
