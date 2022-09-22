@@ -6,13 +6,13 @@
 Explanations :
 
 
-![input](./images/hidden3.jpg?raw=true "how the neural network was set")
+![input](./images/hidden2.jpg?raw=true "how the neural network was set")
 
 
 <p style="text-align: center;">Will become</p>
 
 
-![output](./images/hidden2.jpg?raw=true "how the neural network end")
+![output](./images/hidden3.jpg?raw=true "how the neural network end")
 
 This is how it looks like when you run the code
 
