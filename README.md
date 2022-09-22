@@ -12,9 +12,9 @@ Explanations :
 <p style="text-align: center;">Will become</p>
 
 
-![output](./images/hidden3.jpg?raw=true "how the neural network end")
+![output](./images/hidden2.jpg?raw=true "how the neural network end")
 
-
+This is how it looks like when you run the code
 
 ![explanation](./images/layers_explanation.jpg?raw=true "explanation of the neural network")
 
