@@ -18,15 +18,11 @@ class NeuralNetwork(Layers):
                  inputs: list,
                  results: list,
                  training_set: list = None,
-                 layers: Layers = [],
+                 layers: list = [],
+                 activation_function: str = "sigmoid",
                  trained_set: str = None,
                  manual_entry: bool = False
                  ):
-
-        if isinstance(layers, Layers):
-            layers = layers.layers
-
-        Layers.__init__(self, layers)
 
         self._inputs = np.array(inputs, dtype=float)
 
@@ -44,15 +40,18 @@ class NeuralNetwork(Layers):
 
         self.input_size = len(self.data[0])
         self.output_size = len(self.output[0])
-        # self.reverse_link_layers(self.input_size, self.output_size)
+
         if not manual_entry:
-            self.add_layer(index=0, layer=Layer(self.input_size, self.layers[0].input_size))
-            self.add_layer(layer=Layer(self.layers[-1].output_size, self.output_size))
+            layers.insert(0, Layer(self.input_size, layers[0].input_size))
+            layers.append(Layer(layers[-1].output_size, self.output_size))
+
+        Layers.__init__(self, layers)
+        # self.reverse_link_layers(self.input_size, self.output_size)
 
         # activations_function =  ["sigmoid", "relu", "tanh", "swish"]
 
         if trained_set:
-            self.layers = Layers()
+            self.layers = []
             data = self.load(trained_set)
 
             for i in range(len(data["activation_function"])):
@@ -152,10 +151,10 @@ class NeuralNetwork(Layers):
                 break
 
     def smart_train(self,
-                    learning_method: str = "genetic",
+                    learning_method: str = "deep",
                     epoch: int = 100,
-                    learning_rate: int = 1,
-                    population_size: int = 25,
+                    learning_rate: int = "random",
+                    population_size: int = "random",
                     genetic_mutation: int = 40,
                     cool: list = 300,
                     max_retry: int = 10,
@@ -172,7 +171,6 @@ class NeuralNetwork(Layers):
             mutation = [mutation, ["sigmoid"]]
 
         reset2 = True if mutation else False
-
         j = 0
         k = 0
 
@@ -181,40 +179,30 @@ class NeuralNetwork(Layers):
 
         while not (((res*100)/t_size) <= error) and k < max_retry:
             if learning_method == "deep":
-                self.deep_train(epoch=epoch, learning_rate=learning_rate, error=error, divide_set=divide_set)
+                a = learning_rate
+
+                if learning_rate == "random":
+                    a = random()
+
+                self.deep_train(epoch=epoch, learning_rate=a, error=error, divide_set=divide_set)
 
             elif learning_method == "genetic":
-                self.genetic_train(population_size=population_size, epoch=epoch, init_layer=self.layers, error=error, mutation=genetic_mutation)
+                a = population_size
+                if population_size == "random":
+                    a = randint(5, 100)
+
+                self.genetic_train(population_size=a, epoch=epoch, init_layer=self.layers, error=error, mutation=genetic_mutation)
 
             res = 0
             for i in range(t_size):
                 val = self.predict(self.training_set[i][0], True)
 
-                if False in (val == self.training_set[i][1]):
+                a = (val == self.training_set[i][1])
+                if False in a:
                     res += 1
 
-                if ((res*100)//t_size) > error:
+                if ((res*100)/t_size) > error:
                     break
-
-            if j == cool:
-                j = 0
-                k += 1
-                self.reset_neural_network()
-
-            if k == max_retry//2 and reset:
-                reset = False
-                self.reset_and_shuffle_neural_network()
-
-            if k == max_retry//1.5 and mutation and reset2:
-                reset2 = False
-                a = randint(1, 100)
-
-                if a >= 100-mutation[0]//2:
-                    self.add_layer(Layer(input_size=a, output_size=a, activation_function=choice(mutation[1])))
-
-                elif a <= mutation[0]//2 and self.size > 2:
-                    self.pop_layer()
-
             j += 1
 
         if k >= max_retry:
@@ -223,10 +211,10 @@ class NeuralNetwork(Layers):
         return True
 
     def special_train(self,
-                      learning_method: str = "genetic",
+                      learning_method: str = "shuffle",
                       epoch: int = 100,
-                      learning_rate: int = 1,
-                      population_size: int = 25,
+                      learning_rate: int = "random",
+                      population_size: int = "random",
                       cool: int = 3,
                       max_retry: int = 10,
                       reset: bool = True,
@@ -245,7 +233,10 @@ class NeuralNetwork(Layers):
         select = 0
 
         while not val and i < absolute_end:
-            if isinstance(learning_method, (list, tuple)):
+            if learning_method == "shuffle":
+                learning = choice(["genetic", "deep"])
+
+            elif isinstance(learning_method, (list, tuple)):
                 learning = learning_method[select]
                 select += 1
 

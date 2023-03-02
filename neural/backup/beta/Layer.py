@@ -3,10 +3,10 @@ import numpy as np
 import json
 
 try:
-    # from .Mutation import *
+    from .Mutation import *
     from .numpy_encoder import *
 except ImportError:
-    # from Mutation import *
+    from Mutation import *
     from numpy_encoder import *
 
 
@@ -119,18 +119,15 @@ class Layer():
 
         return res
 
-    def show_layer(self):
-        return f"Layer({self.input_size}, {self.output_size}, {self.activation_function})"
-
     def __str__(self):
-        return self.show_layer()
+        return self.build_str()
 
 
-class Layers(): # Mutations):
+class Layers(Mutations):
     def __init__(self,
             layers: list = [],
         ):
-        # Mutations.__init__(self)
+        Mutations.__init__(self)
         self.layers = layers
         self.size = len(self.layers)
 
@@ -155,30 +152,18 @@ class Layers(): # Mutations):
 
         return metadata
 
-    def link_layers(self, input_size: int = None, output_size: int = None):
-        if not input_size:
-            input_size = self.input_size
-
-        if not output_size:
-            output_size = self.output_size
-
-        i = 0
+    def link_layers(self, input_size, output_size):
+        current = self.layers[0]
 
         self.layers[0].input_size = input_size
 
-        while i < self.size-1:
-            self.layers[i].output_size = self.layers[i+1].input_size
-            i += 1
+        for i in range(1, len(self.layers)):
+            self.layers[i].input_site = current.output_size
+            current = self.layers[i]
 
         self.layers[-1].output_size = output_size
 
-    def reverse_link_layers(self, input_size: int = None, output_size: int = None):
-        if not input_size:
-            input_size = self.input_size
-
-        if not output_size:
-            output_size = self.output_size
-
+    def reverse_link_layers(self, input_size, output_size):
         current = self.layers[-1]
         i = len(self.layers)-2
 
@@ -197,31 +182,6 @@ class Layers(): # Mutations):
         """
         for i in range(len(self.layers)):
             self.layers[i].reset()
-
-    def reset_and_shuffle_neural_network(self):
-        """
-        will reset all the weights and bias of the neural network and will change the amount of weigts
-        """
-        layers = []
-
-        a = self.layers[0].output_size
-
-        a = randint(a-a//2, a+a//2)
-
-        layers.append(Layer(self.layers[0].input_size, a, self.layers[0].activation_function))
-
-        for i in range(1, len(self.layers)-1):
-            b = self.layers[i].output_size
-            b = randint(b-b//2, b+b//2)
-
-            layers.append(Layer(a, b))
-            a = b
-
-        layers.append(Layer(a, self.layers[-1].output_size, self.layers[-1].activation_function))
-
-        self.layers = layers
-        self.reset_neural_network()
-        return layers
 
     def mutate_layers(self,
                       mutation_chance: int = 50,
@@ -246,41 +206,14 @@ class Layers(): # Mutations):
                   activation_function: str = "sigmoid",
                   weight: list = None,
                   bias: list = None,
-                  dense: bool = True,
-                  layer: Layer = None,
-                  index: int = None
+                  dense: bool = True
             ):
-
-        if not layer:
-            if isinstance(index, int) and index <= self.size:
-                self.layers.insert(index, Layer(input_size=input_size, output_size=output_size, weight=weight, bias=bias, activation_function=activation_function, dense=dense))
-            else:
-                self.layers.append(Layer(input_size=input_size, output_size=output_size, weight=weight, bias=bias, activation_function=activation_function, dense=dense))
-
-        elif isinstance(layer, Layer):
-            if isinstance(index, int) and index <= self.size:
-                self.layers.insert(index, layer)
-            else:
-                self.layers.append(layer)
-
+        self.layers.append(Layer(input_size=input_size, output_size=output_size, weight=weight, bias=bias, activation_function=activation_function, dense=dense))
         self.size = len(self.layers)
-        self.link_layers()
-        self.reset_neural_network()
 
     def put_layer(self, layer: Layer):
         self.layers.append(layer)
         self.size = len(self.layers)
-        self.link_layers()
-        self.reset_neural_network()
-
-    def pop_layer(self, index: int = None):
-        if not index:
-            index = self.size//2
-
-        self.layers.pop(index)
-        self.size = len(self.layers)
-        self.link_layers()
-        self.reset_neural_network()
 
     def forward(self, data):
         """
@@ -319,11 +252,6 @@ class Layers(): # Mutations):
 
         self.layers[-1].weight += self.layers[-2].bias.T.dot(out_delta) * learning_rate
 
-    def show_layers(self):
-        print("[")
-        for layer in self.layers:
-            print(layer.show_layer())
-        print("]")
 
 if __name__ == "__main__":
     layers = Layers([

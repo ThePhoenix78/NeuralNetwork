@@ -1,6 +1,6 @@
 from .to_table import make_table
 # from .Flatten import flatten
-from .Layer import *
+from .Layer import Layer
 from .numpy_encoder import NumpyEncoder
 
 import numpy as np
@@ -13,20 +13,14 @@ import warnings
 warnings.filterwarnings('ignore')
 
 
-class NeuralNetwork(Layers):
-    def __init__(self,
-                 inputs: list,
+class NeuralNetwork(object):
+    def __init__(self, inputs: list,
                  results: list,
                  training_set: list = None,
-                 layers: Layers = [],
+                 hidden_layers: list = [[randint(3, 9), "sigmoid"]],
+                 activation_function: str = "sigmoid",
                  trained_set: str = None,
-                 manual_entry: bool = False
                  ):
-
-        if isinstance(layers, Layers):
-            layers = layers.layers
-
-        Layers.__init__(self, layers)
 
         self._inputs = np.array(inputs, dtype=float)
 
@@ -42,26 +36,101 @@ class NeuralNetwork(Layers):
 
         self.data = self._inputs/np.amax(self._inputs, axis=0)
 
+        self.layers = []
+
+        self.activation_function = activation_function
         self.input_size = len(self.data[0])
         self.output_size = len(self.output[0])
-        # self.reverse_link_layers(self.input_size, self.output_size)
-        if not manual_entry:
-            self.add_layer(index=0, layer=Layer(self.input_size, self.layers[0].input_size))
-            self.add_layer(layer=Layer(self.layers[-1].output_size, self.output_size))
-
-        # activations_function =  ["sigmoid", "relu", "tanh", "swish"]
+        self.hidden_layers = []
+        self.size = 0
 
         if trained_set:
-            self.layers = Layers()
             data = self.load(trained_set)
 
-            for i in range(len(data["activation_function"])):
-                self.add_layer(weight=data["weight"][i], bias=data["bias"][i], activation_function=data["activation_function"][i])
+            for i in range(len(data["type"])):
+                self.set_layer(data["weight"][i], data["bias"][i], data["type"][i])
+                self.hidden_layers.append([len(data["weight"][i]), data["type"][i]])
 
-            self.size = len(data["activation_function"])
+            self.hidden_layers.pop(0)
+            self.size = len(data["type"])
             return
 
+        for i in range(len(hidden_layers)):
+            if isinstance(hidden_layers[i], int):
+                hidden_layers[i] = [hidden_layers[i], "sigmoid"]
+
+            hidden_layers[i] = list(hidden_layers[i])
+
+            if hidden_layers[i][1] not in ["sigmoid", "relu", "tanh", "swish"]:
+                hidden_layers[i][1] = "sigmoid"
+
+        self.hidden_layers = hidden_layers
+
         self.reset_neural_network()
+
+    def reset_neural_network(self):
+        """
+        will reset all the weights and bias of the neural network
+        """
+        self.layers = []
+
+        self.size = len(self.hidden_layers)+1
+
+        self.input_size = len(self.data[0])
+        self.output_size = len(self.output[0])
+
+        # self.add_layer(input_size, self.hidden_layers[0][0], self.activation_function)
+        self.add_layer(self.input_size, self.hidden_layers[0][0], self.hidden_layers[0][1])
+
+        for i in range(self.size-2):
+            self.add_layer(self.hidden_layers[i][0], self.hidden_layers[i+1][0], self.hidden_layers[i+1][1])
+
+        # self.add_layer(self.hidden_layers[-1][0], output_size, self.hidden_layers[-1][1])
+        self.add_layer(self.hidden_layers[-1][0], self.output_size, self.activation_function)
+
+        # self.size = len(self.layers)
+
+    def reset_and_shuffle_neural_network(self):
+        for i in range(len(self.hidden_layers)):
+            val = self.hidden_layers[i][0]
+            self.hidden_layers[i][0] = randint(val-val//2, val+val//2)
+
+        self.reset_neural_network()
+
+    def generate_scheme(self):
+        layer = []
+        # layer.append(Layer((input_size, self.hidden_layers[0][0], self.activation_function))
+        layer.append(Layer(self.input_size, self.hidden_layers[0][0], self.hidden_layers[0][1]))
+
+        for i in range(len(self.hidden_layers)-1):
+            layer.append(Layer(self.hidden_layers[i][0], self.hidden_layers[i+1][0], self.hidden_layers[i+1][1]))
+
+        # layer.append(Layer(self.hidden_layers[-1][0], output_size, self.hidden_layers[-1][1]))
+        layer.append(Layer(self.hidden_layers[-1][0], self.output_size, self.activation_function))
+        return layer
+
+    def save(self, name: str = "Neural.json"):
+        dico = {
+            "weight": [self.layers[i].weight for i in range(self.size)],
+            "bias": [self.layers[i].bias for i in range(self.size)],
+            "type": [self.layers[i].type for i in range(self.size)]
+        }
+
+        with open(name, "w") as f:
+            f.write(json.dumps(dico, indent=4, cls=NumpyEncoder))
+
+    def load(self, trained_set: str = "Neural.json"):
+        with open(trained_set, "r") as f:
+            return json.load(f)
+
+    def add_layer(self, input_size, output_size, activation_function: str = "sigmoid", dense: bool = False):
+        self.layers.append(Layer(input_size=input_size, output_size=output_size, activation_function=activation_function, dense=dense))
+
+    def set_layer(self, weight, bias, activation_function):
+        self.layers.append(Layer(weight=weight, bias=bias, activation_function=activation_function))
+
+    def put_layer(self, layer: Layer):
+        self.layers.append(layer)
 
     def select_training_set(self):
         """
@@ -121,6 +190,43 @@ class NeuralNetwork(Layers):
 
         return t_data
 
+    def forward(self, data):
+        """
+        forward method of the Neural Network
+        """
+        z = np.dot(data, self.layers[0].weight)
+        self.layers[0].activate(z)
+
+        for i in range(1, self.size):
+            z1 = np.dot(self.layers[i-1].bias, self.layers[i].weight)
+            self.layers[i].activate(z1)
+
+    def backward(self, data, output, learning_rate: int = 1):
+        """
+        backward method of the Neural Network
+        """
+
+        out = self.layers[-1].bias
+
+        out_error = output - out
+        out_delta = out_error * self.layers[-1].derivate(out)
+
+        z_delta = []
+        t_delta = out_delta
+
+        for i in range(1, self.size):
+            z1_error = t_delta.dot(self.layers[-i].weight.T)
+            z1_delta = z1_error * self.layers[-i-1].derivate()
+            z_delta.append(z1_delta)
+            t_delta = z1_delta
+
+        self.layers[0].weight += data.T.dot(z_delta[-1]) * learning_rate
+
+        for i in range(self.size-2):
+            self.layers[i+1].weight += self.layers[i].bias.T.dot(z_delta[-i-2]) * learning_rate
+
+        self.layers[-1].weight += self.layers[-2].bias.T.dot(out_delta) * learning_rate
+
     def deep_train(self,
                    epoch: int = 1000,
                    learning_rate: int = 1,
@@ -148,14 +254,14 @@ class NeuralNetwork(Layers):
                 self.forward(data[i])
                 self.backward(data[i], output[i], learning_rate)
 
-            if error and self.compare() <= error:
+            if error and self.compare_single() <= error:
                 break
 
     def smart_train(self,
-                    learning_method: str = "genetic",
+                    learning_method: str = "deep",
                     epoch: int = 100,
-                    learning_rate: int = 1,
-                    population_size: int = 25,
+                    learning_rate: int = "random",
+                    population_size: int = "random",
                     genetic_mutation: int = 40,
                     cool: list = 300,
                     max_retry: int = 10,
@@ -172,7 +278,6 @@ class NeuralNetwork(Layers):
             mutation = [mutation, ["sigmoid"]]
 
         reset2 = True if mutation else False
-
         j = 0
         k = 0
 
@@ -181,19 +286,29 @@ class NeuralNetwork(Layers):
 
         while not (((res*100)/t_size) <= error) and k < max_retry:
             if learning_method == "deep":
-                self.deep_train(epoch=epoch, learning_rate=learning_rate, error=error, divide_set=divide_set)
+                a = learning_rate
+
+                if learning_rate == "random":
+                    a = random()
+
+                self.deep_train(epoch=epoch, learning_rate=a, error=error, divide_set=divide_set)
 
             elif learning_method == "genetic":
-                self.genetic_train(population_size=population_size, epoch=epoch, init_layer=self.layers, error=error, mutation=genetic_mutation)
+                a = population_size
+                if population_size == "random":
+                    a = randint(5, 100)
+
+                self.genetic_train(population_size=a, epoch=epoch, init_layer=self.layers, error=error, mutation=genetic_mutation)
 
             res = 0
             for i in range(t_size):
                 val = self.predict(self.training_set[i][0], True)
 
-                if False in (val == self.training_set[i][1]):
+                a = (val == self.training_set[i][1])
+                if False in a:
                     res += 1
 
-                if ((res*100)//t_size) > error:
+                if ((res*100)/t_size) > error:
                     break
 
             if j == cool:
@@ -208,12 +323,11 @@ class NeuralNetwork(Layers):
             if k == max_retry//1.5 and mutation and reset2:
                 reset2 = False
                 a = randint(1, 100)
+                if a >= 100-mutation[0]:
+                    self.hidden_layers.append([randint(3, 25), choice(mutation[1])])
 
-                if a >= 100-mutation[0]//2:
-                    self.add_layer(Layer(input_size=a, output_size=a, activation_function=choice(mutation[1])))
-
-                elif a <= mutation[0]//2 and self.size > 2:
-                    self.pop_layer()
+                elif a <= mutation[0] and len(self.hidden_layers) > 1:
+                    self.hidden_layers.pop()
 
             j += 1
 
@@ -223,10 +337,10 @@ class NeuralNetwork(Layers):
         return True
 
     def special_train(self,
-                      learning_method: str = "genetic",
+                      learning_method: str = "shuffle",
                       epoch: int = 100,
-                      learning_rate: int = 1,
-                      population_size: int = 25,
+                      learning_rate: int = "random",
+                      population_size: int = "random",
                       cool: int = 3,
                       max_retry: int = 10,
                       reset: bool = True,
@@ -245,7 +359,10 @@ class NeuralNetwork(Layers):
         select = 0
 
         while not val and i < absolute_end:
-            if isinstance(learning_method, (list, tuple)):
+            if learning_method == "shuffle":
+                learning = choice(["genetic", "deep"])
+
+            elif isinstance(learning_method, (list, tuple)):
                 learning = learning_method[select]
                 select += 1
 
@@ -262,7 +379,8 @@ class NeuralNetwork(Layers):
                                    reset=reset,
                                    mutation=mutation,
                                    error=error,
-                                   divide_set=divide_set)
+                                   divide_set=divide_set
+                                   )
             i += 1
 
         return val
@@ -272,7 +390,8 @@ class NeuralNetwork(Layers):
             raise "Error! Layers aren't the same!"
 
         for i in range(give.input_size):
-            if randint(1, 100) >= 100-threshold:
+            a = randint(1, 100)
+            if a >= 100-threshold:
                 receive.weight[i] = give.weight[i]
 
     def mix_adn(self, give: Layer, receive: Layer, threshold: int = 50):
@@ -280,9 +399,11 @@ class NeuralNetwork(Layers):
             raise "Error! Layers aren't the same!"
 
         for i in range(give.input_size):
-            if randint(1, 100) >= 100-threshold:
+            a = randint(1, 100)
+            if a >= 100-threshold:
                 for j in range(give.output_size):
-                    if randint(1, 100) >= 100-threshold:
+                    b = randint(1, 100)
+                    if b >= 100-threshold:
                         receive.weight[i][j] = give.weight[i][j]
 
     def genetic_train(self,
@@ -312,7 +433,7 @@ class NeuralNetwork(Layers):
         return:
             the result layer
         """
-        layers = [self.generate_layers() for i in range(population_size)]
+        layers = [self.generate_scheme() for i in range(population_size)]
 
         if isinstance(init_layer, Layer):
             layers.append(deepcopy(init_layer))
@@ -328,7 +449,7 @@ class NeuralNetwork(Layers):
                 # self.show_result(True, "all", layers[i])
                 # comp_all[i] = self.compare_all(layers=layers[i])
 
-                comp_sing[i] = self.compare(layers=layers[i])
+                comp_sing[i] = self.compare_single(layers=layers[i])
 
             err = min(comp_sing)
 
@@ -340,7 +461,7 @@ class NeuralNetwork(Layers):
                 sup = True
                 break
 
-            next_gen = [self.generate_layers() for i in range(population_size-1)]
+            next_gen = [self.generate_scheme() for i in range(population_size-1)]
 
             for j in range(len(next_gen)):
                 for k in range(len(next_gen[j])):
@@ -359,8 +480,8 @@ class NeuralNetwork(Layers):
 
             self.deep_train(100, 1, error)
 
-            p1 = self.compare(prime)
-            p2 = self.compare(self.layers)
+            p1 = self.compare_single(prime)
+            p2 = self.compare_single(self.layers)
 
             if p1 < p2:
                 self.layers = prime
@@ -390,7 +511,7 @@ class NeuralNetwork(Layers):
 
         return rel * 100 / size
 
-    def compare(self, layers: list = None):
+    def compare_single(self, layers: list = None):
         """
         compare all the results from the training set with the actual result
         """
@@ -457,14 +578,13 @@ class NeuralNetwork(Layers):
         if show_layer_info:
             if not layers:
                 lay = self.layers
-
             print(f"Layers : {[[lay[i].input_size, lay[i].activation_function] for i in range(1, len(lay))]} | input size {self.input_size} | output size : {self.output_size}")
         print(f"Errors      : {self.compare_all(layers=layers):.2f}% ({count_error}/{size} errors)")
-        print(f"Error lines : {self.compare(layers=layers):.2f}% ({count_error2}/{size2} errors)")
-        print(make_table(labels=["Neural Network", "Training Set", "Equals", "Nb error"], rows=res, left=["Index"]+[i+1 for i in range(maxi)], centered=True))
+        print(f"Error lines : {self.compare_single(layers=layers):.2f}% ({count_error2}/{size2} errors)")
+        print(make_table(labels=["Neural Network", "Test", "Equals", "Nb error"], rows=res, left=["Index"]+[i+1 for i in range(maxi)], centered=True))
         print("-"*50)
 
-    def predict(self, prediction: list, round: bool = True, layers: list = None):
+    def predict(self, prediction, round: bool = False, layers: list = None):
         """
         will predict a result based on the current neural network
 
@@ -476,6 +596,7 @@ class NeuralNetwork(Layers):
         return:
             the result matrix
         """
+
         if not layers:
             layers = self.layers
 
