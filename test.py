@@ -1,5 +1,5 @@
 import os
-from neural import NeuralNetwork, flatten
+from neural import *
 
 
 # dataset
@@ -68,25 +68,28 @@ for im in os.listdir(test_path):
         training_set.append([flatten(f"{test_path}/{im}", x), [0, 0, 0, 0]])
 
 
-# 2 hiddens layers (25 and 10 length)
-hidden_layers = [
-     [25, "sigmoid"],
-     [10, "sigmoid"]
-]
+# 2 hidden layers (25 and 10 length)
+layers = Layers([
+    Layer(39, 29, "sigmoid"),
+    Layer(29, 19, "sigmoid"),
+    Layer(19, 29, "sigmoid"),
+    Layer(29, 39, "sigmoid")
+])
 
-NN = NeuralNetwork(inputs=entre, results=sortie, training_set=training_set, hidden_layers=hidden_layers, activation_function="sigmoid")
+NN = NeuralNetwork(inputs=entre, results=sortie, training_set=training_set, layers=layers)
 
 NN.show_result()
 
+
 print("Starting training...")
 
-method = "deep"
+method = "genetic"
 epoch = 50
 if method == "deep":
     epoch = 500
 
 a = NN.special_train(learning_method=method, population_size=25, learning_rate=1, cool=10, reset=True, max_retry=10, epoch=epoch, mutation=50, error=10, absolute_end=5)
-# a = NN.smart_train(learning_method=method, population_size=25, learning_rate=1, cool=10, reset=True, max_retry=10, epoch=epoch, mutation=40, error=10)
+# a = NN.smart_train(learning_method=method, population_size=epoch, learning_rate=1, cool=10, reset=True, max_retry=10, epoch=epoch, mutation=60, error=10)
 # NN.genetic_train(population_size=50, epoch=150, error=10, threshold_error=0, mutation=40, method=2)
 # NN.deep_train(epoch=1500, learning_rate=1, error=10)
 
