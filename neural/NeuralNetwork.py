@@ -45,10 +45,12 @@ class NeuralNetwork(Layers):
         self.input_size = len(self.data[0])
         self.output_size = len(self.output[0])
         # self.reverse_link_layers(self.input_size, self.output_size)
+        self.show_layers()
         if not manual_entry:
             self.add_layer(index=0, layer=Layer(self.input_size, self.layers[0].input_size))
             self.add_layer(layer=Layer(self.layers[-1].output_size, self.output_size))
 
+        self.show_layers()
         # activations_function =  ["sigmoid", "relu", "tanh", "swish"]
 
         if trained_set:
