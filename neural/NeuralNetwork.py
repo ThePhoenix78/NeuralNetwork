@@ -45,12 +45,11 @@ class NeuralNetwork(Layers):
         self.input_size = len(self.data[0])
         self.output_size = len(self.output[0])
         # self.reverse_link_layers(self.input_size, self.output_size)
-        self.show_layers()
+
         if not manual_entry:
             self.add_layer(index=0, layer=Layer(self.input_size, self.layers[0].input_size))
             self.add_layer(layer=Layer(self.layers[-1].output_size, self.output_size))
 
-        self.show_layers()
         # activations_function =  ["sigmoid", "relu", "tanh", "swish"]
 
         if trained_set:
@@ -214,9 +213,11 @@ class NeuralNetwork(Layers):
                 if a >= 100-mutation[0]//2:
                     index = randint(1, self.size-1)
                     self.add_layer(index=index, layer=Layer(input_size=a, output_size=a, activation_function=choice(mutation[1])))
+                    self.link_layers()
 
                 elif a <= mutation[0]//2 and self.size > 2:
                     self.pop_layer()
+                    self.link_layers()
 
             j += 1
 
