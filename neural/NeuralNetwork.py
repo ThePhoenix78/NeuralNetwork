@@ -210,7 +210,8 @@ class NeuralNetwork(Layers):
                 a = randint(1, 100)
 
                 if a >= 100-mutation[0]//2:
-                    self.add_layer(Layer(input_size=a, output_size=a, activation_function=choice(mutation[1])))
+                    index = randint(1, self.size-1)
+                    self.add_layer(index=index, layer=Layer(input_size=a, output_size=a, activation_function=choice(mutation[1])))
 
                 elif a <= mutation[0]//2 and self.size > 2:
                     self.pop_layer()
