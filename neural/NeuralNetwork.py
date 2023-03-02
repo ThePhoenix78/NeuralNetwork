@@ -46,21 +46,20 @@ class NeuralNetwork(Layers):
         self.output_size = len(self.output[0])
         # self.reverse_link_layers(self.input_size, self.output_size)
 
-        if not manual_entry:
-            self.add_layer(index=0, layer=Layer(self.input_size, self.layers[0].input_size))
-            self.add_layer(layer=Layer(self.layers[-1].output_size, self.output_size))
-
-        # activations_function =  ["sigmoid", "relu", "tanh", "swish"]
-
         if trained_set:
-            self.layers = Layers()
             data = self.load(trained_set)
 
             for i in range(len(data["activation_function"])):
                 self.add_layer(weight=data["weight"][i], bias=data["bias"][i], activation_function=data["activation_function"][i])
 
-            self.size = len(data["activation_function"])
             return
+
+
+        if not manual_entry:
+            self.add_layer(index=0, layer=Layer(self.input_size, self.layers[0].input_size))
+            self.add_layer(layer=Layer(self.layers[-1].output_size, self.output_size))
+
+        # activations_function =  ["sigmoid", "relu", "tanh", "swish"]
 
         self.reset_neural_network()
 
@@ -188,6 +187,7 @@ class NeuralNetwork(Layers):
                 self.genetic_train(population_size=population_size, epoch=epoch, init_layer=self.layers, error=error, mutation=genetic_mutation)
 
             res = 0
+
             for i in range(t_size):
                 val = self.predict(self.training_set[i][0], True)
 
@@ -205,19 +205,22 @@ class NeuralNetwork(Layers):
             if k == max_retry//2 and reset:
                 reset = False
                 self.reset_and_shuffle_neural_network()
+                self.link_layers()
 
             if k == max_retry//1.5 and mutation and reset2:
                 reset2 = False
                 a = randint(1, 100)
 
                 if a >= 100-mutation[0]//2:
-                    index = randint(1, self.size-1)
+                    index = randint(1, self.size-2)
                     self.add_layer(index=index, layer=Layer(input_size=a, output_size=a, activation_function=choice(mutation[1])))
                     self.link_layers()
+                    self.reset_neural_network()
 
-                elif a <= mutation[0]//2 and self.size > 2:
+                elif a <= mutation[0]//2 and self.size > 3:
                     self.pop_layer()
                     self.link_layers()
+                    self.reset_neural_network()
 
             j += 1
 

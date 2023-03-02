@@ -264,14 +264,10 @@ class Layers(): # Mutations):
                 self.layers.append(layer)
 
         self.size = len(self.layers)
-        self.link_layers()
-        self.reset_neural_network()
 
     def put_layer(self, layer: Layer):
         self.layers.append(layer)
         self.size = len(self.layers)
-        self.link_layers()
-        self.reset_neural_network()
 
     def pop_layer(self, index: int = None):
         if not index:
@@ -279,8 +275,11 @@ class Layers(): # Mutations):
 
         self.layers.pop(index)
         self.size = len(self.layers)
-        self.link_layers()
         self.reset_neural_network()
+
+    def get_layer(self, index: int):
+        if index < self.size-1:
+            return self.layers[index]
 
     def forward(self, data):
         """
